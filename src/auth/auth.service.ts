@@ -43,7 +43,10 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales invalidas');
     }
 
-    const isPasswordValid = await argon2.verify(user.password, password);
+    const isPasswordValid = await this.validateAndMigratePassword(
+      user,
+      password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales invalidas');
     }
@@ -126,6 +129,31 @@ export class AuthService {
     void password;
 
     return safeUser;
+  }
+
+  private async validateAndMigratePassword(
+    user: User,
+    plainPassword: string,
+  ): Promise<boolean> {
+    if (user.password.startsWith('$argon2')) {
+      return argon2.verify(user.password, plainPassword);
+    }
+
+    const isLegacyPasswordValid = user.password === plainPassword;
+    if (!isLegacyPasswordValid) {
+      return false;
+    }
+
+    const passwordHash = await argon2.hash(plainPassword, {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 1,
+    });
+
+    await this.usersRepository.update(user.id, { password: passwordHash });
+
+    return true;
   }
 
   private signAccessToken(user: Pick<User, 'id'>): string {
