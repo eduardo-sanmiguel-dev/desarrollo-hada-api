@@ -1,0 +1,52 @@
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+
+import { Repository } from 'typeorm';
+
+import { User } from './entities/user.entity';
+
+@Injectable()
+export class UsersSeedService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(UsersSeedService.name);
+
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    private readonly configService: ConfigService,
+  ) {}
+
+  async onApplicationBootstrap(): Promise<void> {
+    const existingUsers = await this.usersRepository.count();
+
+    if (existingUsers > 0) {
+      this.logger.debug(
+        'Seed omitido: ya existen usuarios en la base principal',
+      );
+      return;
+    }
+
+    const name = this.configService.get<string>(
+      'app.seed.firstUser.name',
+      'Administrador',
+    );
+    const email = this.configService.get<string>(
+      'app.seed.firstUser.email',
+      'admin@hada.local',
+    );
+    const password = this.configService.get<string>(
+      'app.seed.firstUser.password',
+      'ChangeMe123!',
+    );
+
+    const firstUser = this.usersRepository.create({
+      name,
+      email,
+      password,
+    });
+
+    await this.usersRepository.save(firstUser);
+
+    this.logger.log(`Usuario inicial creado: ${email}`);
+  }
+}
