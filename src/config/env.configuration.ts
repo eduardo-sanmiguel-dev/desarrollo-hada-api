@@ -25,4 +25,19 @@ export default registerAs('app', () => ({
       password: process.env.SEED_FIRST_USER_PASSWORD || 'ChangeMe123!',
     },
   },
+  auth: {
+    accessTokenSecret: process.env.AUTH_ACCESS_TOKEN_SECRET || '',
+    accessTokenExpiresIn: process.env.AUTH_ACCESS_TOKEN_EXPIRES_IN || '15m',
+    refreshTokenSecret: process.env.AUTH_REFRESH_TOKEN_SECRET || '',
+    refreshTokenExpiresIn: process.env.AUTH_REFRESH_TOKEN_EXPIRES_IN || '7d',
+    accessTokenCookieName:
+      process.env.AUTH_ACCESS_TOKEN_COOKIE_NAME || 'access_token',
+    refreshTokenCookieName:
+      process.env.AUTH_REFRESH_TOKEN_COOKIE_NAME || 'refresh_token',
+    cookieDomain: process.env.AUTH_COOKIE_DOMAIN || '',
+    cookiePath: process.env.AUTH_COOKIE_PATH || '/',
+    cookieSecure: process.env.AUTH_COOKIE_SECURE || 'false',
+    cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE || 'lax',
+    credentialsCryptoKey: process.env.AUTH_CREDENTIALS_CRYPTO_KEY || '',
+  },
 }));

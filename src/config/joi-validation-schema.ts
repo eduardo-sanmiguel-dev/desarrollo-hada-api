@@ -19,4 +19,19 @@ export const JoiValidationSchema = Joi.object({
   SEED_FIRST_USER_NAME: Joi.string().min(2).required(),
   SEED_FIRST_USER_EMAIL: Joi.string().email().required(),
   SEED_FIRST_USER_PASSWORD: Joi.string().min(8).required(),
+  AUTH_ACCESS_TOKEN_SECRET: Joi.string().min(20).required(),
+  AUTH_ACCESS_TOKEN_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+[smhd]$/)
+    .required(),
+  AUTH_REFRESH_TOKEN_SECRET: Joi.string().min(20).required(),
+  AUTH_REFRESH_TOKEN_EXPIRES_IN: Joi.string()
+    .pattern(/^\d+[smhd]$/)
+    .required(),
+  AUTH_ACCESS_TOKEN_COOKIE_NAME: Joi.string().required(),
+  AUTH_REFRESH_TOKEN_COOKIE_NAME: Joi.string().required(),
+  AUTH_COOKIE_DOMAIN: Joi.string().allow('').required(),
+  AUTH_COOKIE_PATH: Joi.string().required(),
+  AUTH_COOKIE_SECURE: Joi.string().valid('true', 'false').required(),
+  AUTH_COOKIE_SAME_SITE: Joi.string().valid('strict', 'lax', 'none').required(),
+  AUTH_CREDENTIALS_CRYPTO_KEY: Joi.string().min(16).required(),
 });

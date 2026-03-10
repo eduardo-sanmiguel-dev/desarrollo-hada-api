@@ -10,14 +10,15 @@ import {
 
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { UsersService } from './users.service';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  create(@Body() createUserDto: CreateUserDto, @CurrentUser() userId: number) {
+    return this.usersService.create(createUserDto, userId);
   }
 
   @Get()

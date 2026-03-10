@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 
 import { Repository } from 'typeorm';
+import argon2 from 'argon2';
 
 import { User } from './entities/user.entity';
 
@@ -38,11 +39,17 @@ export class UsersSeedService implements OnApplicationBootstrap {
       'app.seed.firstUser.password',
       'ChangeMe123!',
     );
+    const passwordHash = await argon2.hash(password, {
+      type: argon2.argon2id,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 1,
+    });
 
     const firstUser = this.usersRepository.create({
       name,
       email,
-      password,
+      password: passwordHash,
     });
 
     await this.usersRepository.save(firstUser);

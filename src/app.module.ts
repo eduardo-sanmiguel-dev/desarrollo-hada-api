@@ -1,8 +1,15 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { JoiValidationSchema } from './config/joi-validation-schema';
+import { AuthTokenMiddleware } from './auth/auth-token.middleware';
+import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import EnvConfiguration from './config/env.configuration';
 
@@ -59,9 +66,21 @@ const env = process.env.NODE_ENV || 'development';
         synchronize: false,
       }),
     }),
+    AuthModule,
     UsersModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(AuthTokenMiddleware)
+      .exclude(
+        { path: 'auth/login', method: RequestMethod.POST },
+        { path: 'auth/refresh-token', method: RequestMethod.POST },
+        { path: 'auth/logout', method: RequestMethod.POST },
+      )
+      .forRoutes('*');
+  }
+}
