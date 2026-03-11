@@ -9,6 +9,8 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly relations = ['createdBy', 'updatedBy', 'deletedBy'];
+
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -41,21 +43,25 @@ export class UsersService {
       name,
       email,
       password: passwordHash,
-      createdBy: currentUserId,
+      createdBy: {
+        id: currentUserId,
+      },
     });
 
     const createdUser = await this.usersRepository.save(userToCreate);
-    const { password, ...safeUser } = createdUser;
-    void password;
 
-    return safeUser;
+    return createdUser;
   }
 
   findAll() {
-    return {
+    return this.usersRepository.find({
+      relations: this.relations,
+      order: { name: 'ASC' },
+    });
+    /* return {
       message: 'This action returns all users',
       hallazgosDbConnected: this.hallazgosDataSource.isInitialized,
-    };
+    }; */
   }
 
   async countUsersByDatabase() {

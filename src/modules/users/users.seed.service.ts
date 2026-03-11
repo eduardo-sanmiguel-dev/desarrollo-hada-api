@@ -21,9 +21,6 @@ export class UsersSeedService implements OnApplicationBootstrap {
     const existingUsers = await this.usersRepository.count();
 
     if (existingUsers > 0) {
-      this.logger.debug(
-        'Seed omitido: ya existen usuarios en la base principal',
-      );
       return;
     }
 
@@ -50,6 +47,9 @@ export class UsersSeedService implements OnApplicationBootstrap {
       name,
       email,
       password: passwordHash,
+      createdBy: {
+        id: 1,
+      },
     });
 
     await this.usersRepository.save(firstUser);

@@ -11,6 +11,9 @@ import { JoiValidationSchema } from './config/joi-validation-schema';
 import { AuthTokenMiddleware } from './auth/auth-token.middleware';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { AreasModule } from './modules/areas/areas.module';
+import { WorkplacesModule } from './modules/workplaces/workplaces.module';
+import { ReasonsForRequestModule } from './modules/reasons-for-request/reasons-for-request.module';
 import EnvConfiguration from './config/env.configuration';
 
 const env = process.env.NODE_ENV || 'development';
@@ -68,6 +71,9 @@ const env = process.env.NODE_ENV || 'development';
     }),
     AuthModule,
     UsersModule,
+    AreasModule,
+    WorkplacesModule,
+    ReasonsForRequestModule,
   ],
   controllers: [],
   providers: [],

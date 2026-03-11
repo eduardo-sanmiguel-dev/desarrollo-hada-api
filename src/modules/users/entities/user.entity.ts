@@ -8,6 +8,9 @@ import {
   ManyToOne,
 } from 'typeorm';
 
+//import { Workplace } from 'src/modules/workplaces/entities/workplace.entity';
+//import { Area } from 'src/modules/areas/entities/area.entity';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -19,10 +22,10 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ length: 255 })
+  @Column({ length: 255, select: false })
   password: string;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, select: false })
   failedLoginAttempts: number;
 
   @CreateDateColumn()
@@ -34,12 +37,30 @@ export class User {
   @DeleteDateColumn()
   deletedAt?: Date;
 
-  @ManyToOne(() => User, { nullable: true })
-  createdBy?: number;
+  @ManyToOne(() => User)
+  createdBy: User;
 
-  @ManyToOne(() => User, { nullable: true })
-  updatedBy?: number;
+  @ManyToOne(() => User)
+  updatedBy: User;
 
-  @ManyToOne(() => User, { nullable: true })
-  deletedBy?: number;
+  @ManyToOne(() => User)
+  deletedBy?: User;
+
+  /* @ManyToOne(() => Area, ({ createdBy }) => createdBy)
+  createdByArea: Area;
+
+  @ManyToOne(() => Area, ({ updatedBy }) => updatedBy)
+  updatedByArea: Area;
+
+  @ManyToOne(() => Area, ({ deletedBy }) => deletedBy)
+  deletedByArea: Area;
+
+  @ManyToOne(() => Workplace, ({ createdBy }) => createdBy)
+  createdByWorkplace: Workplace;
+
+  @ManyToOne(() => Workplace, ({ updatedBy }) => updatedBy)
+  updatedByWorkplace: Workplace;
+
+  @ManyToOne(() => Workplace, ({ deletedBy }) => deletedBy)
+  deletedByWorkplace: Workplace; */
 }
