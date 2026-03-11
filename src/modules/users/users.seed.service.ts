@@ -47,6 +47,14 @@ export class UsersSeedService implements OnApplicationBootstrap {
       name,
       email,
       password: passwordHash,
+      permissions: {
+        dashboard: [],
+        'requisicion-de-personal': [
+          'applicant',
+          'approve-request',
+          'recruiter',
+        ],
+      },
       createdBy: {
         id: 1,
       },

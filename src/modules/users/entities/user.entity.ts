@@ -8,9 +8,6 @@ import {
   ManyToOne,
 } from 'typeorm';
 
-//import { Workplace } from 'src/modules/workplaces/entities/workplace.entity';
-//import { Area } from 'src/modules/areas/entities/area.entity';
-
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -27,6 +24,9 @@ export class User {
 
   @Column({ default: 0, select: false })
   failedLoginAttempts: number;
+
+  @Column('jsonb', { select: false })
+  permissions: Record<string, string[]>;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -45,22 +45,4 @@ export class User {
 
   @ManyToOne(() => User)
   deletedBy?: User;
-
-  /* @ManyToOne(() => Area, ({ createdBy }) => createdBy)
-  createdByArea: Area;
-
-  @ManyToOne(() => Area, ({ updatedBy }) => updatedBy)
-  updatedByArea: Area;
-
-  @ManyToOne(() => Area, ({ deletedBy }) => deletedBy)
-  deletedByArea: Area;
-
-  @ManyToOne(() => Workplace, ({ createdBy }) => createdBy)
-  createdByWorkplace: Workplace;
-
-  @ManyToOne(() => Workplace, ({ updatedBy }) => updatedBy)
-  updatedByWorkplace: Workplace;
-
-  @ManyToOne(() => Workplace, ({ deletedBy }) => deletedBy)
-  deletedByWorkplace: Workplace; */
 }

@@ -1,20 +1,21 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   MiddlewareConsumer,
   Module,
   NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { PersonnelRequisitionsModule } from './modules/personnel-requisitions/personnel-requisitions.module';
+import { ReasonsForRequestModule } from './modules/reasons-for-request/reasons-for-request.module';
+import { WorkplacesModule } from './modules/workplaces/workplaces.module';
 import { JoiValidationSchema } from './config/joi-validation-schema';
 import { AuthTokenMiddleware } from './auth/auth-token.middleware';
-import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { AreasModule } from './modules/areas/areas.module';
-import { WorkplacesModule } from './modules/workplaces/workplaces.module';
-import { ReasonsForRequestModule } from './modules/reasons-for-request/reasons-for-request.module';
 import EnvConfiguration from './config/env.configuration';
+import { AuthModule } from './auth/auth.module';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -74,6 +75,7 @@ const env = process.env.NODE_ENV || 'development';
     AreasModule,
     WorkplacesModule,
     ReasonsForRequestModule,
+    PersonnelRequisitionsModule,
   ],
   controllers: [],
   providers: [],
