@@ -238,6 +238,8 @@ export class AuthService {
   }
 
   private buildClearedCookie(name: string): string {
+    const domain = this.configService.get<string>('app.auth.cookieDomain', '');
+
     return serialize(name, '', {
       httpOnly: true,
       secure:
@@ -248,6 +250,8 @@ export class AuthService {
         'lax',
       ),
       path: this.configService.get<string>('app.auth.cookiePath', '/'),
+      ...(domain ? { domain } : {}),
+      expires: new Date(0),
       maxAge: 0,
     });
   }
