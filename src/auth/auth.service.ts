@@ -251,7 +251,6 @@ export class AuthService {
       ),
       path: this.configService.get<string>('app.auth.cookiePath', '/'),
       ...(domain ? { domain } : {}),
-      expires: new Date(0),
       maxAge: 0,
     });
   }
