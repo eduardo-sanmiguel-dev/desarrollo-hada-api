@@ -8,11 +8,11 @@ import {
   Delete,
 } from '@nestjs/common';
 
+import { PersonnelRequisitionsService } from './personnel-requisitions.service';
 import {
   CreatePersonnelRequisitionDto,
   UpdatePersonnelRequisitionDto,
 } from './dto';
-import { PersonnelRequisitionsService } from './personnel-requisitions.service';
 
 @Controller('personnel-requisitions')
 export class PersonnelRequisitionsController {

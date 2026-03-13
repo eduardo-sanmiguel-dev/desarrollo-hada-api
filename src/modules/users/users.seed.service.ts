@@ -42,11 +42,16 @@ export class UsersSeedService implements OnApplicationBootstrap {
       timeCost: 3,
       parallelism: 1,
     });
+    const code = this.configService.get<string>(
+      'app.seed.firstUser.code',
+      '20090',
+    );
 
     const firstUser = this.usersRepository.create({
       name,
       email,
       password: passwordHash,
+      code: Number(code),
       permissions: {
         dashboard: [],
         'requisicion-de-personal': [

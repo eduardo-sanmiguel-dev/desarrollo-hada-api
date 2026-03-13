@@ -19,6 +19,7 @@ export const JoiValidationSchema = Joi.object({
   SEED_FIRST_USER_NAME: Joi.string().min(2).required(),
   SEED_FIRST_USER_EMAIL: Joi.string().email().required(),
   SEED_FIRST_USER_PASSWORD: Joi.string().min(8).required(),
+  SEED_FIRST_USER_CODE: Joi.string().min(5).max(10).required(),
   AUTH_ACCESS_TOKEN_SECRET: Joi.string().min(20).required(),
   AUTH_ACCESS_TOKEN_EXPIRES_IN: Joi.string()
     .pattern(/^\d+[smhd]$/)

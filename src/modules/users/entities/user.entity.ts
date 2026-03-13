@@ -8,6 +8,8 @@ import {
   ManyToOne,
 } from 'typeorm';
 
+import { PersonnelRequisition } from 'src/modules/personnel-requisitions/entities/personnel-requisition.entity';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -22,11 +24,17 @@ export class User {
   @Column({ length: 255, select: false })
   password: string;
 
-  @Column({ default: 0, select: false })
-  failedLoginAttempts: number;
+  @Column({
+    unique: true,
+    type: 'bigint',
+  })
+  code: number;
 
   @Column('jsonb', { select: false })
   permissions: Record<string, string[]>;
+
+  @Column({ default: 0, select: false })
+  failedLoginAttempts: number;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -45,4 +53,10 @@ export class User {
 
   @ManyToOne(() => User)
   deletedBy?: User;
+
+  @ManyToOne(
+    () => PersonnelRequisition,
+    (personnelRequisition) => personnelRequisition.usersRemplaced,
+  )
+  personnelRequisition: PersonnelRequisition;
 }

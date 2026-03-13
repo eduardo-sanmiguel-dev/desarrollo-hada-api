@@ -6,11 +6,13 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
-  OneToOne,
+  OneToMany,
 } from 'typeorm';
 
 import { ReasonForRequest } from 'src/modules/reasons-for-request/entities/reasons-for-request.entity';
 import { Workplace } from 'src/modules/workplaces/entities/workplace.entity';
+import { Project } from 'src/modules/projects/entities/project.entity';
+import { EmployeePosition } from 'src/modules/employees/entities';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Area } from 'src/modules/areas/entities/area.entity';
 
@@ -28,14 +30,20 @@ export class PersonnelRequisition {
   })
   requestDate: Date;
 
-  @Column()
+  @ManyToOne(() => Area)
   area: Area;
 
-  @Column()
+  @ManyToOne(() => User)
   requestingUser: User;
 
-  @Column()
+  @ManyToOne(() => EmployeePosition)
+  positionRequestingUser: EmployeePosition;
+
+  @ManyToOne(() => Workplace)
   workplace: Workplace;
+
+  @ManyToOne(() => EmployeePosition)
+  positionRequired: EmployeePosition;
 
   @Column()
   numberOfVacancies: number;
@@ -43,11 +51,14 @@ export class PersonnelRequisition {
   @Column()
   isExternal: boolean;
 
-  @Column()
+  @ManyToOne(() => ReasonForRequest)
   reasonForRequest: ReasonForRequest;
 
-  @OneToOne(() => User, { nullable: true })
-  userReplace?: User;
+  @OneToMany(() => User, (user) => user.personnelRequisition)
+  usersRemplaced: User[];
+
+  @ManyToOne(() => Project)
+  projectReplaced?: Project;
 
   @Column({ nullable: true })
   observations?: string;

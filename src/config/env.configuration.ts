@@ -23,6 +23,7 @@ export default registerAs('app', () => ({
       name: process.env.SEED_FIRST_USER_NAME || 'Administrador',
       email: process.env.SEED_FIRST_USER_EMAIL || 'admin@hada.local',
       password: process.env.SEED_FIRST_USER_PASSWORD || 'ChangeMe123!',
+      code: process.env.SEED_FIRST_USER_CODE || '20090',
     },
   },
   auth: {

@@ -16,6 +16,8 @@ import { UsersModule } from './modules/users/users.module';
 import { AreasModule } from './modules/areas/areas.module';
 import EnvConfiguration from './config/env.configuration';
 import { AuthModule } from './auth/auth.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -76,6 +78,8 @@ const env = process.env.NODE_ENV || 'development';
     WorkplacesModule,
     ReasonsForRequestModule,
     PersonnelRequisitionsModule,
+    EmployeesModule,
+    ProjectsModule,
   ],
   controllers: [],
   providers: [],
