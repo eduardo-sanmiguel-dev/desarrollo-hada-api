@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { PersonnelRequisitionsService } from './personnel-requisitions.service';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import {
   CreatePersonnelRequisitionDto,
   UpdatePersonnelRequisitionDto,
@@ -21,9 +22,13 @@ export class PersonnelRequisitionsController {
   ) {}
 
   @Post()
-  create(@Body() createPersonnelRequisitionDto: CreatePersonnelRequisitionDto) {
+  create(
+    @Body() createPersonnelRequisitionDto: CreatePersonnelRequisitionDto,
+    @CurrentUser() userId: number,
+  ) {
     return this.personnelRequisitionsService.create(
       createPersonnelRequisitionDto,
+      userId,
     );
   }
 
@@ -41,15 +46,17 @@ export class PersonnelRequisitionsController {
   update(
     @Param('id') id: string,
     @Body() updatePersonnelRequisitionDto: UpdatePersonnelRequisitionDto,
+    @CurrentUser() userId: number,
   ) {
     return this.personnelRequisitionsService.update(
       +id,
       updatePersonnelRequisitionDto,
+      userId,
     );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.personnelRequisitionsService.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser() userId: number) {
+    return this.personnelRequisitionsService.remove(+id, userId);
   }
 }

@@ -1,9 +1,20 @@
+import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
 
+import { Repository } from 'typeorm';
+
 import { CreateProjectDto, UpdateProjectDto } from './dto';
+import { Project } from './entities/project.entity';
 
 @Injectable()
 export class ProjectsService {
+  private readonly relations = ['createdBy', 'updatedBy', 'deletedBy'];
+
+  constructor(
+    @InjectRepository(Project)
+    private readonly projectsRepository: Repository<Project>,
+  ) {}
+
   create(createProjectDto: CreateProjectDto) {
     return createProjectDto;
   }
@@ -12,8 +23,11 @@ export class ProjectsService {
     return `This action returns all projects`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
+  async findOne(id: number) {
+    return this.projectsRepository.findOne({
+      where: { id },
+      relations: this.relations,
+    });
   }
 
   update(id: number, updateProjectDto: UpdateProjectDto) {

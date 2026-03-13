@@ -1,7 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+
+import { GlobalExceptionFilter } from './common/filters';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger('MAIN');
@@ -13,6 +15,18 @@ async function bootstrap() {
   const TIMEZONE = configService.get<string>(
     'app.timezone',
     Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
   );
 
   await app.listen(PORT);
