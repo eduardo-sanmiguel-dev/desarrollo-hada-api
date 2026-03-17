@@ -20,7 +20,7 @@ export class ProjectsService {
   }
 
   findAll() {
-    return `This action returns all projects`;
+    return this.projectsRepository.find({ relations: this.relations });
   }
 
   async findOne(id: number) {

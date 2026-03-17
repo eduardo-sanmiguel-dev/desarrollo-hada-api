@@ -35,4 +35,5 @@ export const JoiValidationSchema = Joi.object({
   AUTH_COOKIE_SECURE: Joi.string().valid('true', 'false').required(),
   AUTH_COOKIE_SAME_SITE: Joi.string().valid('strict', 'lax', 'none').required(),
   AUTH_CREDENTIALS_CRYPTO_KEY: Joi.string().min(16).required(),
+  FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
 });

@@ -4,6 +4,7 @@ export default registerAs('app', () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
   port: Number(process.env.PORT) || 4002,
   timezone: process.env.TZ || Intl.DateTimeFormat().resolvedOptions().timeZone,
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   database: {
     host: process.env.DB_HOST || '127.0.0.1',
     port: Number(process.env.DB_PORT) || 5432,

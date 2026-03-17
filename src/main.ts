@@ -16,6 +16,16 @@ async function bootstrap() {
     'app.timezone',
     Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
+  const FRONTEND_URL = configService.get<string>(
+    'app.frontendUrl',
+    'http://localhost:3000',
+  );
+
+  // Configurar CORS
+  app.enableCors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
