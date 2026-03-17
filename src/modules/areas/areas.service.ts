@@ -20,13 +20,11 @@ export class AreasService {
     return createAreaDto;
   }
 
-  async findAll() {
-    const areas = await this.areasRepository.find({
+  findAll() {
+    return this.areasRepository.find({
       relations: this.relations,
       order: { name: 'ASC' },
     });
-
-    return areas;
   }
 
   findOne(id: number) {

@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 
 import { PersonnelRequisition } from './entities/personnel-requisition.entity';
 import { Project } from '../projects/entities/project.entity';
+import { User } from '../users/entities/user.entity';
+import { Employee } from '../employees/entities';
 import {
   CreatePersonnelRequisitionDto,
   UpdatePersonnelRequisitionDto,
@@ -13,6 +15,7 @@ import {
 @Injectable()
 export class PersonnelRequisitionsService {
   private readonly relations = [
+    'authorizedBy',
     'createdBy',
     'updatedBy',
     'deletedBy',
@@ -29,12 +32,37 @@ export class PersonnelRequisitionsService {
     private readonly personnelRequisitionsRepository: Repository<PersonnelRequisition>,
     @InjectRepository(Project)
     private readonly projectsRepository: Repository<Project>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    @InjectRepository(Employee)
+    private readonly employeesRepository: Repository<Employee>,
   ) {}
 
   async create(
     createPersonnelRequisitionDto: CreatePersonnelRequisitionDto,
     userId: number,
   ) {
+    const currentUser = await this.usersRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException(
+        `Usuario solicitante con id ${userId} no encontrado`,
+      );
+    }
+
+    const employeeRequestingUser = await this.employeesRepository.findOne({
+      where: { code: currentUser.code },
+      relations: ['position'],
+    });
+
+    if (!employeeRequestingUser) {
+      throw new NotFoundException(
+        `Empleado solicitante con código ${currentUser.code} no encontrado`,
+      );
+    }
+
     const {
       areaId,
       workplaceId,
@@ -49,16 +77,20 @@ export class PersonnelRequisitionsService {
 
     let projectId = 0;
 
+    const projectReplacedNameCleaned = projectReplacedName
+      ?.trim()
+      .toLocaleLowerCase();
+
     if (projectReplacedName) {
       const existingProject = await this.projectsRepository.findOne({
-        where: { name: projectReplacedName },
+        where: { name: projectReplacedNameCleaned },
       });
 
       projectId = existingProject?.id ?? 0;
 
       if (!existingProject) {
         const newProject = this.projectsRepository.create({
-          name: projectReplacedName,
+          name: projectReplacedNameCleaned,
         });
         projectId = (await this.projectsRepository.save(newProject)).id;
       }
@@ -78,6 +110,9 @@ export class PersonnelRequisitionsService {
       ...(projectId ? { projectReplaced: { id: projectId } } : {}),
       observations,
       createdBy: { id: userId },
+      positionRequestingUser: {
+        id: employeeRequestingUser.position.id,
+      },
     });
 
     const row =

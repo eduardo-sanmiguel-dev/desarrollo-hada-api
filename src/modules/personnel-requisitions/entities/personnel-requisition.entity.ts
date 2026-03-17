@@ -63,6 +63,9 @@ export class PersonnelRequisition {
   @Column({ nullable: true })
   observations?: string;
 
+  @Column({ default: false })
+  isAuthorized: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -71,6 +74,9 @@ export class PersonnelRequisition {
 
   @DeleteDateColumn()
   deletedAt?: Date;
+
+  @ManyToOne(() => User)
+  authorizedBy?: User;
 
   @ManyToOne(() => User)
   createdBy: User;

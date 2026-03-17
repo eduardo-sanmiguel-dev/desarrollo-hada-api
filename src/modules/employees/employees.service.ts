@@ -1,15 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { CreateEmployeeDto } from './dto/create-employee.dto';
-import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { Repository } from 'typeorm';
+
+import { CreateEmployeeDto, UpdateEmployeeDto } from './dto';
+import { Employee, EmployeePosition } from './entities';
 
 @Injectable()
 export class EmployeesService {
+  private readonly logger = new Logger(EmployeesService.name);
+  private readonly relations = ['createdBy', 'updatedBy', 'deletedBy'];
+
+  constructor(
+    @InjectRepository(Employee)
+    private readonly employeesRepository: Repository<Employee>,
+    @InjectRepository(EmployeePosition)
+    private readonly employeePositionsRepository: Repository<EmployeePosition>,
+  ) {}
+
   create(createEmployeeDto: CreateEmployeeDto) {
-    return 'This action adds a new employee';
+    return createEmployeeDto;
   }
 
   findAll() {
-    return `This action returns all employees`;
+    return this.employeesRepository.find({
+      relations: this.relations,
+      order: { name: 'ASC' },
+    });
+  }
+
+  findAllPositions() {
+    return this.employeePositionsRepository.find({
+      order: { name: 'ASC' },
+    });
   }
 
   findOne(id: number) {
@@ -17,7 +40,7 @@ export class EmployeesService {
   }
 
   update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+    return { id, updateEmployeeDto };
   }
 
   remove(id: number) {

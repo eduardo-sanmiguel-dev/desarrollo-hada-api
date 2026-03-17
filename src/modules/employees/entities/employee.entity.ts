@@ -62,6 +62,9 @@ export class Employee {
   @DeleteDateColumn()
   deletedAt?: Date;
 
+  @ManyToOne(() => Employee)
+  replacedBy?: Employee;
+
   @ManyToOne(() => User)
   createdBy: User;
 
