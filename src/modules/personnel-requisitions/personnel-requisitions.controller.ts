@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { PersonnelRequisitionsService } from './personnel-requisitions.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import {
   CreatePersonnelRequisitionDto,
+  FindAllPersonnelRequisitionsDto,
   UpdatePersonnelRequisitionDto,
 } from './dto';
 
@@ -33,8 +35,8 @@ export class PersonnelRequisitionsController {
   }
 
   @Get()
-  findAll() {
-    return this.personnelRequisitionsService.findAll();
+  findAll(@Query() query: FindAllPersonnelRequisitionsDto) {
+    return this.personnelRequisitionsService.findAll(query);
   }
 
   @Get(':id')

@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 import { PersonnelRequisition } from './entities/personnel-requisition.entity';
 import { Project } from '../projects/entities/project.entity';
 import { User } from '../users/entities/user.entity';
 import { Employee } from '../employees/entities';
+import { FindAllPersonnelRequisitionsDto } from './dto/find-all-personnel-requisitions.dto';
 import {
   CreatePersonnelRequisitionDto,
   UpdatePersonnelRequisitionDto,
@@ -19,6 +20,7 @@ export class PersonnelRequisitionsService {
     'createdBy',
     'updatedBy',
     'deletedBy',
+    'requestingUser',
     'area',
     'workplace',
     'positionRequired',
@@ -99,6 +101,7 @@ export class PersonnelRequisitionsService {
     const personnelRequisition = this.personnelRequisitionsRepository.create({
       requestDate: new Date(),
       area: { id: areaId },
+      requestingUser: { id: userId },
       workplace: { id: workplaceId },
       positionRequired: { id: positionRequiredId },
       numberOfVacancies,
@@ -121,10 +124,131 @@ export class PersonnelRequisitionsService {
     return this.findOne(row.id);
   }
 
-  findAll() {
-    return this.personnelRequisitionsRepository.find({
-      relations: this.relations,
-    });
+  async findAll(query: FindAllPersonnelRequisitionsDto) {
+    const rawPage = Number(query.page ?? 1);
+    const rawLimit = Number(query.limit ?? 10);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit = Number.isFinite(rawLimit) ? rawLimit : 10;
+    const shouldPaginate = limit > 0;
+
+    const search = query.search?.trim() ?? '';
+    const sortField:
+      | 'id'
+      | 'requestDate'
+      | 'createdAt'
+      | 'numberOfVacancies'
+      | 'isExternal'
+      | 'reasonForRequest'
+      | 'area'
+      | 'requestingUser'
+      | 'positionRequestingUser'
+      | 'workplace'
+      | 'positionRequired' = query.sortField ?? 'id';
+    const sortDirection =
+      (query.sortDirection?.toUpperCase() as 'ASC' | 'DESC' | undefined) ??
+      'DESC';
+
+    const qb = this.personnelRequisitionsRepository
+      .createQueryBuilder('requisition')
+      .leftJoinAndSelect('requisition.authorizedBy', 'authorizedBy')
+      .leftJoinAndSelect('requisition.createdBy', 'createdBy')
+      .leftJoinAndSelect('requisition.updatedBy', 'updatedBy')
+      .leftJoinAndSelect('requisition.deletedBy', 'deletedBy')
+      .leftJoinAndSelect('requisition.area', 'area')
+      .leftJoinAndSelect('requisition.workplace', 'workplace')
+      .leftJoinAndSelect('requisition.positionRequired', 'positionRequired')
+      .leftJoinAndSelect('requisition.reasonForRequest', 'reasonForRequest')
+      .leftJoinAndSelect('requisition.usersRemplaced', 'usersRemplaced')
+      .leftJoinAndSelect('requisition.projectReplaced', 'projectReplaced')
+      .leftJoinAndSelect('requisition.requestingUser', 'requestingUser')
+      .leftJoinAndSelect(
+        'requisition.positionRequestingUser',
+        'positionRequestingUser',
+      );
+
+    if (search) {
+      qb.andWhere(
+        new Brackets((where) => {
+          where.where('CAST(requisition.id AS TEXT) ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('area.name ILIKE :search', { search: `%${search}%` });
+          where.orWhere('workplace.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('positionRequired.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('reasonForRequest.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere(
+            'CAST(requisition.numberOfVacancies AS TEXT) ILIKE :search',
+            {
+              search: `%${search}%`,
+            },
+          );
+          where.orWhere(
+            `CASE WHEN requisition.isExternal THEN 'externa' ELSE 'interna' END ILIKE :search`,
+            { search: `%${search}%` },
+          );
+          where.orWhere('requestingUser.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('positionRequestingUser.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+        }),
+      );
+    }
+
+    const sortColumnByField: Record<
+      | 'id'
+      | 'requestDate'
+      | 'createdAt'
+      | 'numberOfVacancies'
+      | 'isExternal'
+      | 'reasonForRequest'
+      | 'area'
+      | 'requestingUser'
+      | 'positionRequestingUser'
+      | 'workplace'
+      | 'positionRequired',
+      string
+    > = {
+      id: 'requisition.id',
+      requestDate: 'requisition.requestDate',
+      createdAt: 'requisition.createdAt',
+      numberOfVacancies: 'requisition.numberOfVacancies',
+      isExternal: 'requisition.isExternal',
+      reasonForRequest: 'reasonForRequest.name',
+      area: 'area.name',
+      requestingUser: 'requestingUser.name',
+      positionRequestingUser: 'positionRequestingUser.name',
+      workplace: 'workplace.name',
+      positionRequired: 'positionRequired.name',
+    };
+
+    qb.orderBy(sortColumnByField[sortField], sortDirection);
+
+    if (shouldPaginate) {
+      qb.skip((page - 1) * limit).take(limit);
+    }
+
+    const [items, total] = await qb.getManyAndCount();
+
+    const responseLimit = shouldPaginate ? limit : total;
+    const totalPages = shouldPaginate
+      ? Math.max(1, Math.ceil(total / Math.max(1, limit)))
+      : 1;
+
+    return {
+      items,
+      total,
+      page: shouldPaginate ? page : 1,
+      limit: responseLimit,
+      totalPages,
+    };
   }
 
   async findOne(id: number) {

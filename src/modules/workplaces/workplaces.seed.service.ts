@@ -18,7 +18,7 @@ export class WorkplacesSeedService implements OnApplicationBootstrap {
     const data = [
       { name: 'BARRANQUILLA - HADA INTERNATIONAL' },
       { name: 'MANIZALES - HADA INTERNATIONAL' },
-      { name: 'MEXICO - COSMETICOS TRUJILLO' },
+      { name: 'MÉXICO - COSMETICOS TRUJILLO' },
     ];
 
     for (const { name } of data) {
