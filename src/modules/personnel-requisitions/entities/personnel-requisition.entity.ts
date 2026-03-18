@@ -12,7 +12,7 @@ import {
 import { ReasonForRequest } from 'src/modules/reasons-for-request/entities/reasons-for-request.entity';
 import { Workplace } from 'src/modules/workplaces/entities/workplace.entity';
 import { Project } from 'src/modules/projects/entities/project.entity';
-import { EmployeePosition } from 'src/modules/employees/entities';
+import { Employee, EmployeePosition } from 'src/modules/employees/entities';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Area } from 'src/modules/areas/entities/area.entity';
 
@@ -54,8 +54,8 @@ export class PersonnelRequisition {
   @ManyToOne(() => ReasonForRequest)
   reasonForRequest: ReasonForRequest;
 
-  @OneToMany(() => User, (user) => user.personnelRequisition)
-  usersRemplaced: User[];
+  @OneToMany(() => Employee, (employee) => employee.personnelRequisition)
+  usersRemplaced?: Employee[];
 
   @ManyToOne(() => Project)
   projectReplaced?: Project;

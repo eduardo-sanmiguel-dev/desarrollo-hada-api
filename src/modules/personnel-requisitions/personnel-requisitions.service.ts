@@ -40,6 +40,34 @@ export class PersonnelRequisitionsService {
     private readonly employeesRepository: Repository<Employee>,
   ) {}
 
+  async projectReplacedCreate(projectReplacedName: string | undefined) {
+    let projectId = 0;
+
+    if (!projectReplacedName) {
+      return projectId;
+    }
+
+    const projectReplacedNameCleaned = projectReplacedName
+      .trim()
+      .toLocaleLowerCase();
+
+    if (projectReplacedName) {
+      const existingProject = await this.projectsRepository.findOne({
+        where: { name: projectReplacedNameCleaned },
+      });
+      projectId = existingProject?.id ?? 0;
+
+      if (!existingProject) {
+        const newProject = this.projectsRepository.create({
+          name: projectReplacedNameCleaned,
+        });
+        projectId = (await this.projectsRepository.save(newProject)).id;
+      }
+    }
+
+    return projectId;
+  }
+
   async create(
     createPersonnelRequisitionDto: CreatePersonnelRequisitionDto,
     userId: number,
@@ -77,26 +105,7 @@ export class PersonnelRequisitionsService {
       observations,
     } = createPersonnelRequisitionDto;
 
-    let projectId = 0;
-
-    const projectReplacedNameCleaned = projectReplacedName
-      ?.trim()
-      .toLocaleLowerCase();
-
-    if (projectReplacedName) {
-      const existingProject = await this.projectsRepository.findOne({
-        where: { name: projectReplacedNameCleaned },
-      });
-
-      projectId = existingProject?.id ?? 0;
-
-      if (!existingProject) {
-        const newProject = this.projectsRepository.create({
-          name: projectReplacedNameCleaned,
-        });
-        projectId = (await this.projectsRepository.save(newProject)).id;
-      }
-    }
+    const projectId = await this.projectReplacedCreate(projectReplacedName);
 
     const personnelRequisition = this.personnelRequisitionsRepository.create({
       requestDate: new Date(),
@@ -104,18 +113,18 @@ export class PersonnelRequisitionsService {
       requestingUser: { id: userId },
       workplace: { id: workplaceId },
       positionRequired: { id: positionRequiredId },
+      reasonForRequest: { id: reasonForRequestId },
+      positionRequestingUser: {
+        id: employeeRequestingUser.position.id,
+      },
       numberOfVacancies,
       isExternal,
-      reasonForRequest: { id: reasonForRequestId },
       ...(usersRemplaced.length && {
         usersRemplaced: usersRemplaced.map((userId) => ({ id: userId })),
       }),
       ...(projectId ? { projectReplaced: { id: projectId } } : {}),
       observations,
       createdBy: { id: userId },
-      positionRequestingUser: {
-        id: employeeRequestingUser.position.id,
-      },
     });
 
     const row =
@@ -274,9 +283,34 @@ export class PersonnelRequisitionsService {
   ) {
     const personnelRequisition = await this.findOne(id);
 
+    const {
+      areaId,
+      workplaceId,
+      positionRequiredId,
+      reasonForRequestId,
+      numberOfVacancies,
+      isExternal,
+      observations,
+      projectReplacedName,
+      usersRemplaced,
+    } = updatePersonnelRequisitionDto;
+
+    const projectId = await this.projectReplacedCreate(projectReplacedName);
+
     Object.assign(personnelRequisition, {
-      ...updatePersonnelRequisitionDto,
+      numberOfVacancies,
+      area: { id: areaId },
+      requestingUser: { id: userId },
+      workplace: { id: workplaceId },
+      positionRequired: { id: positionRequiredId },
+      reasonForRequest: { id: reasonForRequestId },
       updatedBy: { id: userId },
+      isExternal,
+      observations,
+      ...(projectId ? { projectReplaced: { id: projectId } } : {}),
+      ...(usersRemplaced && {
+        usersRemplaced: usersRemplaced.map((userId) => ({ id: userId })),
+      }),
     });
 
     await this.personnelRequisitionsRepository.save(personnelRequisition);
@@ -285,12 +319,11 @@ export class PersonnelRequisitionsService {
   }
 
   async remove(id: number, userId: number) {
-    await this.findOne(id);
+    const personnelRequisition = await this.findOne(id);
 
-    await this.personnelRequisitionsRepository.softDelete({
-      id,
-      deletedBy: { id: userId },
-    });
+    personnelRequisition.deletedBy = { id: userId } as User;
+    await this.personnelRequisitionsRepository.save(personnelRequisition);
+    await this.personnelRequisitionsRepository.softDelete(id);
 
     return { message: `Solicitud de personal con id ${id} eliminada` };
   }

@@ -8,6 +8,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 
+import { PersonnelRequisition } from 'src/modules/personnel-requisitions/entities/personnel-requisition.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { EmployeePosition } from './employee-position.entity';
 import { EmployeeGenre } from './employee-genre.entity';
@@ -82,4 +83,10 @@ export class Employee {
 
   @ManyToOne(() => EmployeeGenre, ({ employees }) => employees)
   gender: EmployeeGenre;
+
+  @ManyToOne(
+    () => PersonnelRequisition,
+    (personnelRequisition) => personnelRequisition.usersRemplaced,
+  )
+  personnelRequisition: PersonnelRequisition;
 }

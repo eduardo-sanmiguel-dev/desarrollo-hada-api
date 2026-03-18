@@ -8,8 +8,6 @@ import {
   ManyToOne,
 } from 'typeorm';
 
-import { PersonnelRequisition } from 'src/modules/personnel-requisitions/entities/personnel-requisition.entity';
-
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -53,10 +51,4 @@ export class User {
 
   @ManyToOne(() => User)
   deletedBy?: User;
-
-  @ManyToOne(
-    () => PersonnelRequisition,
-    (personnelRequisition) => personnelRequisition.usersRemplaced,
-  )
-  personnelRequisition: PersonnelRequisition;
 }
