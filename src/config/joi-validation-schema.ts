@@ -35,5 +35,8 @@ export const JoiValidationSchema = Joi.object({
   AUTH_COOKIE_SECURE: Joi.string().valid('true', 'false').required(),
   AUTH_COOKIE_SAME_SITE: Joi.string().valid('strict', 'lax', 'none').required(),
   AUTH_CREDENTIALS_CRYPTO_KEY: Joi.string().min(16).required(),
-  FRONTEND_URL: Joi.string().uri().default('http://localhost:3000'),
+  FRONTEND_URL: Joi.string().uri().required().default('http://localhost:3000'),
+  MAIL_HOST: Joi.string().hostname().required(),
+  MAIL_USER: Joi.string().email().required(),
+  MAIL_PASSWORD: Joi.string().required(),
 });

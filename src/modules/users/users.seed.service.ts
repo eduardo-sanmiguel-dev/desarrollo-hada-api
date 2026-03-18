@@ -53,8 +53,8 @@ export class UsersSeedService implements OnApplicationBootstrap {
       password: passwordHash,
       code: Number(code),
       permissions: {
-        dashboard: [],
-        'requisicion-de-personal': [
+        ['/dashboard']: [],
+        '/requisicion-de-personal': [
           'applicant',
           'approve-request',
           'recruiter',

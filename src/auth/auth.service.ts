@@ -126,10 +126,7 @@ export class AuthService {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    const { password, ...safeUser } = user;
-    void password;
-
-    return safeUser;
+    return user;
   }
 
   private async validateAndMigratePassword(

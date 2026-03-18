@@ -28,7 +28,7 @@ export class User {
   })
   code: number;
 
-  @Column('jsonb', { select: false })
+  @Column('jsonb')
   permissions: Record<string, string[]>;
 
   @Column({ default: 0, select: false })

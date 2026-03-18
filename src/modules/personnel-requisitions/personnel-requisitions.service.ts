@@ -12,6 +12,7 @@ import {
   CreatePersonnelRequisitionDto,
   UpdatePersonnelRequisitionDto,
 } from './dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class PersonnelRequisitionsService {
@@ -38,6 +39,7 @@ export class PersonnelRequisitionsService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Employee)
     private readonly employeesRepository: Repository<Employee>,
+    private readonly mailService: MailService,
   ) {}
 
   async projectReplacedCreate(projectReplacedName: string | undefined) {
@@ -130,7 +132,26 @@ export class PersonnelRequisitionsService {
     const row =
       await this.personnelRequisitionsRepository.save(personnelRequisition);
 
-    return this.findOne(row.id);
+    const currentPersonnelRequisition = await this.findOne(row.id);
+
+    //Obtener todos los usuarios que tienen permisos para aprobar solicitudes de personal, existe una key permission (jsonb) en user
+    // {"/dashboard": [], "/requisicion-de-personal": ["applicant", "approve-request", "recruiter"]}
+    const usersToNotify = await this.usersRepository
+      .createQueryBuilder('user')
+      .where(
+        `user.permissions ->> '/requisicion-de-personal' ILIKE '%approve-request%'`,
+      )
+      .getMany();
+
+    const emailsToNotify = usersToNotify.map((user) => user.email);
+
+    // Enviar correo
+    void this.mailService.personnelRequisitionCreate(
+      emailsToNotify,
+      currentPersonnelRequisition,
+    );
+
+    return currentPersonnelRequisition;
   }
 
   async findAll(query: FindAllPersonnelRequisitionsDto) {
@@ -316,6 +337,22 @@ export class PersonnelRequisitionsService {
     await this.personnelRequisitionsRepository.save(personnelRequisition);
 
     return this.findOne(id);
+  }
+
+  async authorizeRequest(requisitionId: number, userId: number) {
+    const personnelRequisition = await this.findOne(requisitionId);
+
+    personnelRequisition.authorizedBy = { id: userId } as User;
+    personnelRequisition.isAuthorized = true;
+    personnelRequisition.authorizedDate = new Date();
+    personnelRequisition.updatedBy = { id: userId } as User;
+    personnelRequisition.updatedAt = new Date();
+
+    await this.personnelRequisitionsRepository.save(personnelRequisition);
+
+    return {
+      message: `Solicitud de personal con id ${requisitionId} autorizada`,
+    };
   }
 
   async remove(id: number, userId: number) {

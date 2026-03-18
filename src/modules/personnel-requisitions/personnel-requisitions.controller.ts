@@ -34,6 +34,17 @@ export class PersonnelRequisitionsController {
     );
   }
 
+  @Post('authorize-request/:requisitionId')
+  authorizeRequest(
+    @Param('requisitionId') requisitionId: string,
+    @CurrentUser() userId: number,
+  ) {
+    return this.personnelRequisitionsService.authorizeRequest(
+      +requisitionId,
+      userId,
+    );
+  }
+
   @Get()
   findAll(@Query() query: FindAllPersonnelRequisitionsDto) {
     return this.personnelRequisitionsService.findAll(query);

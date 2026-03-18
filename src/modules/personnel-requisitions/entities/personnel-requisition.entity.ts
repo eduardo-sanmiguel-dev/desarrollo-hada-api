@@ -66,6 +66,9 @@ export class PersonnelRequisition {
   @Column({ default: false })
   isAuthorized: boolean;
 
+  @Column({ nullable: true })
+  authorizedDate?: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 
