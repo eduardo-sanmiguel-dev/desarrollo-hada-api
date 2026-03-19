@@ -72,8 +72,6 @@ export class PersonnelRequisitionsService {
   }
 
   async findUserByPermissions(route: string, permission: string) {
-    //Obtener todos los usuarios que tienen permisos para aprobar solicitudes de personal, existe una key permission (jsonb) en user
-    // {"/dashboard": [], "/requisicion-de-personal": ["applicant", "approve-request", "recruiter"]}
     const users = await this.usersRepository
       .createQueryBuilder('user')
       .where(`user.permissions ->> :route ILIKE :permission`, {

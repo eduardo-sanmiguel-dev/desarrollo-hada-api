@@ -8,6 +8,15 @@ import {
   ManyToOne,
 } from 'typeorm';
 
+export type UserPermissionValue =
+  | string[]
+  | UserPermissions
+  | UserPermissions[];
+
+export interface UserPermissions {
+  [route: string]: UserPermissionValue;
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -28,8 +37,8 @@ export class User {
   })
   code: number;
 
-  @Column('jsonb')
-  permissions: Record<string, string[]>;
+  @Column('jsonb', { default: {} })
+  permissions: UserPermissions;
 
   @Column({ default: 0, select: false })
   failedLoginAttempts: number;

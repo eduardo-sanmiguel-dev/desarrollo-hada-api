@@ -47,19 +47,18 @@ export class UsersSeedService implements OnApplicationBootstrap {
       '20090',
     );
 
+    const permissions = {
+      ['/dashboard']: [],
+      '/requisicion-de-personal': ['applicant', 'approve-request', 'recruiter'],
+      '/configuraciones': [{ '/tiempos-de-respuesta': [] }],
+    };
+
     const firstUser = this.usersRepository.create({
       name,
       email,
       password: passwordHash,
       code: Number(code),
-      permissions: {
-        ['/dashboard']: [],
-        '/requisicion-de-personal': [
-          'applicant',
-          'approve-request',
-          'recruiter',
-        ],
-      },
+      permissions,
       createdBy: {
         id: 1,
       },
