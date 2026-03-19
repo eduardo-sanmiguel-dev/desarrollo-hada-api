@@ -197,6 +197,7 @@ export class PersonnelRequisitionsService {
       .leftJoinAndSelect('requisition.area', 'area')
       .leftJoinAndSelect('requisition.workplace', 'workplace')
       .leftJoinAndSelect('requisition.positionRequired', 'positionRequired')
+      .leftJoinAndSelect('positionRequired.config', 'positionRequiredConfig')
       .leftJoinAndSelect('requisition.reasonForRequest', 'reasonForRequest')
       .leftJoinAndSelect('requisition.usersRemplaced', 'usersRemplaced')
       .leftJoinAndSelect('requisition.projectReplaced', 'projectReplaced')

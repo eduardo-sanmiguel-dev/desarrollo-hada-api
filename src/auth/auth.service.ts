@@ -120,6 +120,7 @@ export class AuthService {
   async findUserProfileById(userId: number): Promise<AuthUserProfile> {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
+      select: ['id', 'name', 'email', 'code', 'permissions'],
     });
 
     if (!user) {

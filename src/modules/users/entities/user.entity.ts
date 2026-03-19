@@ -37,7 +37,7 @@ export class User {
   })
   code: number;
 
-  @Column('jsonb', { default: {} })
+  @Column('jsonb', { default: {}, select: false })
   permissions: UserPermissions;
 
   @Column({ default: 0, select: false })
