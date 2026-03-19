@@ -28,6 +28,7 @@ export class PersonnelRequisitionsService {
     'reasonForRequest',
     'usersRemplaced',
     'projectReplaced',
+    'positionRequestingUser',
   ];
 
   constructor(
@@ -68,6 +69,20 @@ export class PersonnelRequisitionsService {
     }
 
     return projectId;
+  }
+
+  async findUserByPermissions(route: string, permission: string) {
+    //Obtener todos los usuarios que tienen permisos para aprobar solicitudes de personal, existe una key permission (jsonb) en user
+    // {"/dashboard": [], "/requisicion-de-personal": ["applicant", "approve-request", "recruiter"]}
+    const users = await this.usersRepository
+      .createQueryBuilder('user')
+      .where(`user.permissions ->> :route ILIKE :permission`, {
+        route,
+        permission: `%${permission}%`,
+      })
+      .getMany();
+
+    return users;
   }
 
   async create(
@@ -134,14 +149,10 @@ export class PersonnelRequisitionsService {
 
     const currentPersonnelRequisition = await this.findOne(row.id);
 
-    //Obtener todos los usuarios que tienen permisos para aprobar solicitudes de personal, existe una key permission (jsonb) en user
-    // {"/dashboard": [], "/requisicion-de-personal": ["applicant", "approve-request", "recruiter"]}
-    const usersToNotify = await this.usersRepository
-      .createQueryBuilder('user')
-      .where(
-        `user.permissions ->> '/requisicion-de-personal' ILIKE '%approve-request%'`,
-      )
-      .getMany();
+    const usersToNotify = await this.findUserByPermissions(
+      '/requisicion-de-personal',
+      'approve-request',
+    );
 
     const emailsToNotify = usersToNotify.map((user) => user.email);
 
@@ -349,6 +360,21 @@ export class PersonnelRequisitionsService {
     personnelRequisition.updatedAt = new Date();
 
     await this.personnelRequisitionsRepository.save(personnelRequisition);
+
+    const currentPersonnelRequisition = await this.findOne(requisitionId);
+
+    const usersToNotify = await this.findUserByPermissions(
+      '/requisicion-de-personal',
+      'recruiter',
+    );
+
+    const emailsToNotify = usersToNotify.map((user) => user.email);
+
+    // Enviar correo
+    void this.mailService.personnelRequisitionAuthorized(
+      emailsToNotify,
+      currentPersonnelRequisition,
+    );
 
     return {
       message: `Solicitud de personal con id ${requisitionId} autorizada`,

@@ -2,7 +2,7 @@
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <title>Nueva solicitud de personal</title>
+    <title>Solicitud de personal autorizada</title>
   </head>
   <body
     style="
@@ -62,7 +62,7 @@
 										color: #ffffff;
 									'
                 >
-                  Nueva solicitud de personal
+                  Solicitud de personal autorizada
                 </h1>
                 <p
                   style='
@@ -71,9 +71,9 @@
 										font-size: 14px;
 									'
                 >
-                  Se registró la solicitud
+                  Se autorizó la solicitud
                   <strong>ID {{id}}</strong>
-                  y requiere seguimiento.
+                  en la plataforma.
                 </p>
               </td>
             </tr>
@@ -84,9 +84,9 @@
                   Hola,
                 </p>
                 <p style='margin: 0 0 18px; font-size: 15px; line-height: 1.6'>
-                  Se ha creado una nueva requisición de personal en la
-                  plataforma. A continuación, encontrarás el resumen de la
-                  información principal.
+                  Se ha autorizado una requisición de personal en la plataforma.
+                  A continuación, encontrarás el resumen de la información
+                  principal.
                 </p>
 
                 <table
@@ -124,6 +124,22 @@
                       Fecha de creación
                     </td>
                     <td style='padding: 10px 14px'>{{createdAt}}</td>
+                  </tr>
+                  <tr>
+                    <td
+                      style='background: #f3faf0; padding: 10px 14px; font-weight: 700'
+                    >
+                      Autorizado por
+                    </td>
+                    <td style='padding: 10px 14px'>{{authorizedB}}</td>
+                  </tr>
+                  <tr>
+                    <td
+                      style='background: #f3faf0; padding: 10px 14px; font-weight: 700'
+                    >
+                      Fecha de autorización
+                    </td>
+                    <td style='padding: 10px 14px'>{{authorizedDate}}</td>
                   </tr>
                   <tr>
                     <td

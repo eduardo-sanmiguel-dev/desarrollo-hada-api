@@ -63,6 +63,14 @@ export class MailService {
       const requisitionsUrl =
         `${baseFrontendUrl}/requisicion-de-personal` +
         `?viewId=${personnelRequisition.id}`;
+      const usersRemplacedNames =
+        personnelRequisition.usersRemplaced &&
+        personnelRequisition.usersRemplaced.length > 1
+          ? personnelRequisition.usersRemplaced
+              .map((employee) => employee.name)
+              .join(', ')
+          : undefined;
+      const projectReplacedName = personnelRequisition.projectReplaced?.name;
 
       const mailOptions: ISendMailOptions = {
         to: emailsToNotify,
@@ -89,6 +97,8 @@ export class MailService {
           callType: personnelRequisition.isExternal ? 'Externa' : 'Interna',
           observations:
             personnelRequisition.observations?.trim() || 'Sin observaciones',
+          usersRemplacedNames,
+          projectReplacedName,
           requisitionsUrl,
         },
       };
@@ -103,6 +113,81 @@ export class MailService {
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
         `Failed to send create email for personnel requisition ID: ${personnelRequisition.id}. Error: ${errorMessage}`,
+      );
+    }
+  }
+
+  async personnelRequisitionAuthorized(
+    emailsToNotify: string[],
+    personnelRequisition: PersonnelRequisition,
+  ): Promise<void> {
+    const emailTest = this.emailTest;
+    if (emailTest.length) {
+      emailsToNotify = emailTest;
+    }
+
+    this.logger.debug(
+      `Sending authorized email to ${emailsToNotify.join(', ')} for personnel requisition ID: ${personnelRequisition.id}`,
+    );
+
+    try {
+      const baseFrontendUrl = this.FRONTEND_URL.replace(/\/+$/, '');
+      const requisitionsUrl =
+        `${baseFrontendUrl}/requisicion-de-personal` +
+        `?viewId=${personnelRequisition.id}`;
+      const usersRemplacedNames =
+        personnelRequisition.usersRemplaced &&
+        personnelRequisition.usersRemplaced.length > 1
+          ? personnelRequisition.usersRemplaced
+              .map((employee) => employee.name)
+              .join(', ')
+          : undefined;
+      const projectReplacedName = personnelRequisition.projectReplaced?.name;
+
+      const mailOptions: ISendMailOptions = {
+        to: emailsToNotify,
+        from: `"Desarrollo hada (solicitud de personal autorizada)" <${this.MAIL_USER_APP}>`,
+        subject: `Solicitud de personal autorizada (ID: ${personnelRequisition.id})`,
+        template: 'personnel-requisition-authorized',
+        context: {
+          id: personnelRequisition.id,
+          requestDate: this.formatDate(personnelRequisition.requestDate),
+          createdAt: this.formatDate(personnelRequisition.createdAt),
+          authorizedB:
+            personnelRequisition.authorizedBy?.name ?? 'No especificado',
+          authorizedDate: this.formatDate(personnelRequisition.authorizedDate),
+          areaName: personnelRequisition.area?.name ?? 'No especificada',
+          requestingUserName:
+            personnelRequisition.requestingUser?.name ?? 'No especificado',
+          requestingPositionName:
+            personnelRequisition.positionRequestingUser?.name ??
+            'No especificado',
+          workplaceName:
+            personnelRequisition.workplace?.name ?? 'No especificado',
+          positionRequiredName:
+            personnelRequisition.positionRequired?.name ?? 'No especificado',
+          reasonForRequestName:
+            personnelRequisition.reasonForRequest?.name ?? 'No especificado',
+          numberOfVacancies: personnelRequisition.numberOfVacancies,
+          callType: personnelRequisition.isExternal ? 'Externa' : 'Interna',
+          observations:
+            personnelRequisition.observations?.trim() || 'Sin observaciones',
+          usersRemplacedNames,
+          projectReplacedName,
+          requisitionsUrl,
+        },
+      };
+
+      const mailer = this.mailerService as {
+        sendMail: (options: ISendMailOptions) => Promise<unknown>;
+      };
+
+      await mailer.sendMail(mailOptions);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(
+        `Failed to send authorized email for personnel requisition ID: ${personnelRequisition.id}. Error: ${errorMessage}`,
       );
     }
   }
