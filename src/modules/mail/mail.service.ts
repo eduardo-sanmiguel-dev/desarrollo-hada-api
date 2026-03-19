@@ -74,7 +74,7 @@ export class MailService {
 
       const mailOptions: ISendMailOptions = {
         to: emailsToNotify,
-        from: `"Desarrollo hada (solicitud de personal)" <${this.MAIL_USER_APP}>`,
+        from: `"Desarrollo hada" <${this.MAIL_USER_APP}>`,
         subject: `Nueva solicitud de personal creada (ID: ${personnelRequisition.id})`,
         template: 'personnel-requisition-create',
         context: {
@@ -146,7 +146,7 @@ export class MailService {
 
       const mailOptions: ISendMailOptions = {
         to: emailsToNotify,
-        from: `"Desarrollo hada (solicitud de personal autorizada)" <${this.MAIL_USER_APP}>`,
+        from: `"Desarrollo hada" <${this.MAIL_USER_APP}>`,
         subject: `Solicitud de personal autorizada (ID: ${personnelRequisition.id})`,
         template: 'personnel-requisition-authorized',
         context: {
