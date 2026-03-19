@@ -29,10 +29,17 @@ export class EmployeesService {
     });
   }
 
-  findAllPositions() {
-    return this.employeePositionsRepository.find({
-      order: { name: 'ASC' },
-    });
+  findAllPositions(withoutConfiguration = false) {
+    const qb = this.employeePositionsRepository
+      .createQueryBuilder('position')
+      .leftJoin('position.config', 'positionConfiguration')
+      .orderBy('position.name', 'ASC');
+
+    if (withoutConfiguration) {
+      qb.andWhere('positionConfiguration.id IS NULL');
+    }
+
+    return qb.getMany();
   }
 
   findOne(id: number) {

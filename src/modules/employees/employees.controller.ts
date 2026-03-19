@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto';
@@ -26,8 +27,15 @@ export class EmployeesController {
   }
 
   @Get('positions')
-  findAllPositions() {
-    return this.employeesService.findAllPositions();
+  findAllPositions(
+    @Query('withoutConfiguration') withoutConfiguration?: string,
+  ) {
+    const shouldFilterWithoutConfiguration =
+      withoutConfiguration === 'true' || withoutConfiguration === '1';
+
+    return this.employeesService.findAllPositions(
+      shouldFilterWithoutConfiguration,
+    );
   }
 
   @Get(':id')

@@ -7,8 +7,10 @@ import {
   OneToMany,
   DeleteDateColumn,
   ManyToOne,
+  OneToOne,
 } from 'typeorm';
 
+import { PositionConfiguration } from 'src/modules/position-configurations/entities/position-configuration.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Employee } from './employee.entity';
 
@@ -42,4 +44,10 @@ export class EmployeePosition {
 
   @OneToMany(() => Employee, (employee) => employee.position)
   employees: Employee[];
+
+  @OneToOne(
+    () => PositionConfiguration,
+    (positionConfiguration) => positionConfiguration.position,
+  )
+  config: PositionConfiguration;
 }

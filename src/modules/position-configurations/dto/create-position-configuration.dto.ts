@@ -5,5 +5,5 @@ export class CreatePositionConfigurationDto {
   positionId: number;
 
   @IsPositive()
-  responseTime: number;
+  responseTimeInDays: number;
 }

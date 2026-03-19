@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   ManyToOne,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 import { EmployeePosition } from 'src/modules/employees/entities';
@@ -26,7 +27,7 @@ export class PositionConfiguration {
       to: (value: number) => Math.floor(value),
     },
   })
-  responseTime: number;
+  responseTimeInDays: number;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -46,6 +47,10 @@ export class PositionConfiguration {
   @ManyToOne(() => User)
   deletedBy?: User;
 
-  @OneToOne(() => EmployeePosition)
+  @OneToOne(
+    () => EmployeePosition,
+    (employeePosition) => employeePosition.config,
+  )
+  @JoinColumn()
   position: EmployeePosition;
 }

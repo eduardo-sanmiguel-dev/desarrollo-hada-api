@@ -6,12 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 
 import { PositionConfigurationsService } from './position-configurations.service';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import {
   CreatePositionConfigurationDto,
+  FindAllPositionConfigurationsDto,
   UpdatePositionConfigurationDto,
 } from './dto';
 
@@ -33,8 +35,8 @@ export class PositionConfigurationsController {
   }
 
   @Get()
-  findAll() {
-    return this.positionConfigurationsService.findAll();
+  findAll(@Query() query: FindAllPositionConfigurationsDto) {
+    return this.positionConfigurationsService.findAll(query);
   }
 
   @Get(':id')
