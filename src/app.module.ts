@@ -19,6 +19,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmployeesModule } from './modules/employees/employees.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { MailModule } from './modules/mail/mail.module';
+import { PositionConfigurationsModule } from './modules/position-configurations/position-configurations.module';
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -82,6 +83,7 @@ const env = process.env.NODE_ENV || 'development';
     PersonnelRequisitionsModule,
     EmployeesModule,
     ProjectsModule,
+    PositionConfigurationsModule,
   ],
   controllers: [],
   providers: [],

@@ -45,7 +45,13 @@ export class PersonnelRequisition {
   @ManyToOne(() => EmployeePosition)
   positionRequired: EmployeePosition;
 
-  @Column()
+  @Column({
+    type: 'int',
+    transformer: {
+      from: (value: number) => value,
+      to: (value: number) => Math.floor(value),
+    },
+  })
   numberOfVacancies: number;
 
   @Column()
