@@ -153,13 +153,15 @@ export class PersonnelRequisitionsService {
       'approve-request',
     );
 
-    const emailsToNotify = usersToNotify.map((user) => user.email);
+    if (usersToNotify.length) {
+      const emailsToNotify = usersToNotify.map((user) => user.email);
 
-    // Enviar correo
-    void this.mailService.personnelRequisitionCreate(
-      emailsToNotify,
-      currentPersonnelRequisition,
-    );
+      // Enviar correo
+      void this.mailService.personnelRequisitionCreate(
+        emailsToNotify,
+        currentPersonnelRequisition,
+      );
+    }
 
     return currentPersonnelRequisition;
   }
@@ -368,13 +370,15 @@ export class PersonnelRequisitionsService {
       'recruiter',
     );
 
-    const emailsToNotify = usersToNotify.map((user) => user.email);
+    if (usersToNotify.length) {
+      const emailsToNotify = usersToNotify.map((user) => user.email);
 
-    // Enviar correo
-    void this.mailService.personnelRequisitionAuthorized(
-      emailsToNotify,
-      currentPersonnelRequisition,
-    );
+      // Enviar correo
+      void this.mailService.personnelRequisitionAuthorized(
+        emailsToNotify,
+        currentPersonnelRequisition,
+      );
+    }
 
     return {
       message: `Solicitud de personal con id ${requisitionId} autorizada`,
