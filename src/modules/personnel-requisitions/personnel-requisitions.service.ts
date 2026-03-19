@@ -25,6 +25,7 @@ export class PersonnelRequisitionsService {
     'area',
     'workplace',
     'positionRequired',
+    'positionRequired.config',
     'reasonForRequest',
     'usersRemplaced',
     'projectReplaced',
