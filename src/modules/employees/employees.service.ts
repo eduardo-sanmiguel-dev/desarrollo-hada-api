@@ -16,6 +16,7 @@ export class EmployeesService {
     'area',
     'position',
     'gender',
+    'personnelRequisition',
   ];
 
   constructor(
@@ -36,6 +37,7 @@ export class EmployeesService {
       areaId,
       positionId,
       genderId,
+      personnelRequisitionId,
     } = createEmployeeDto;
 
     const employee = this.employeesRepository.create({
@@ -46,6 +48,9 @@ export class EmployeesService {
       area: { id: areaId },
       position: { id: positionId },
       gender: { id: genderId },
+      ...(personnelRequisitionId
+        ? { personnelRequisition: { id: personnelRequisitionId } }
+        : {}),
       createdBy: { id: userId },
     });
 
@@ -107,6 +112,7 @@ export class EmployeesService {
       areaId,
       positionId,
       genderId,
+      personnelRequisitionId,
     } = updateEmployeeDto;
 
     await this.employeesRepository.update(
@@ -119,6 +125,9 @@ export class EmployeesService {
         area: { id: areaId },
         position: { id: positionId },
         gender: { id: genderId },
+        ...(personnelRequisitionId
+          ? { personnelRequisition: { id: personnelRequisitionId } }
+          : {}),
         updatedBy: { id: userId },
       }),
     );

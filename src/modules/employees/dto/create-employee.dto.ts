@@ -1,5 +1,11 @@
-import { IsDate, IsNumber, IsPositive, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  IsDate,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export class CreateEmployeeDto {
   @IsNumber()
@@ -24,4 +30,8 @@ export class CreateEmployeeDto {
 
   @IsPositive()
   readonly genderId: number;
+
+  @IsOptional()
+  @IsPositive()
+  readonly personnelRequisitionId?: number;
 }
