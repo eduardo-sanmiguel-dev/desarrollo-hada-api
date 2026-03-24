@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 
 import { Employee, EmployeeGenre, EmployeePosition } from './entities';
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto';
+import { PersonnelRequisition } from '../personnel-requisitions/entities/personnel-requisition.entity';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -26,7 +27,46 @@ export class EmployeesService {
     private readonly employeePositionsRepository: Repository<EmployeePosition>,
     @InjectRepository(EmployeeGenre)
     private readonly employeeGenresRepository: Repository<EmployeeGenre>,
+    @InjectRepository(PersonnelRequisition)
+    private readonly personnelRequisitionsRepository: Repository<PersonnelRequisition>,
   ) {}
+
+  private calculatePercentageOfCompliance(
+    replacedUsers: number,
+    vacancies: number,
+  ): number {
+    if (vacancies <= 0) {
+      return 0;
+    }
+
+    return Math.min(100, Math.round((replacedUsers / vacancies) * 100));
+  }
+
+  private async refreshComplianceForRequisition(
+    requisitionId: number,
+  ): Promise<void> {
+    const requisition = await this.personnelRequisitionsRepository.findOne({
+      where: { id: requisitionId },
+      select: ['id', 'numberOfVacancies'],
+    });
+
+    if (!requisition) {
+      return;
+    }
+
+    const replacedUsersCount = await this.employeesRepository.count({
+      where: { personnelRequisition: { id: requisitionId } },
+    });
+
+    const percentage = this.calculatePercentageOfCompliance(
+      replacedUsersCount,
+      requisition.numberOfVacancies,
+    );
+
+    await this.personnelRequisitionsRepository.update(requisitionId, {
+      percentageOfCompliance: percentage,
+    });
+  }
 
   async create(createEmployeeDto: CreateEmployeeDto, userId: number) {
     const {
@@ -54,7 +94,13 @@ export class EmployeesService {
       createdBy: { id: userId },
     });
 
-    return this.employeesRepository.save(employee);
+    const createdEmployee = await this.employeesRepository.save(employee);
+
+    if (personnelRequisitionId) {
+      await this.refreshComplianceForRequisition(personnelRequisitionId);
+    }
+
+    return createdEmployee;
   }
 
   findAll() {
@@ -103,6 +149,7 @@ export class EmployeesService {
     userId: number,
   ) {
     const employee = await this.findOne(id);
+    const previousRequisitionId = employee.personnelRequisition?.id;
 
     const {
       code,
@@ -131,6 +178,20 @@ export class EmployeesService {
         updatedBy: { id: userId },
       }),
     );
+
+    const currentRequisitionId =
+      personnelRequisitionId ?? previousRequisitionId;
+
+    if (currentRequisitionId) {
+      await this.refreshComplianceForRequisition(currentRequisitionId);
+    }
+
+    if (
+      previousRequisitionId &&
+      previousRequisitionId !== currentRequisitionId
+    ) {
+      await this.refreshComplianceForRequisition(previousRequisitionId);
+    }
 
     return this.findOne(id);
   }

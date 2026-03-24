@@ -54,6 +54,11 @@ export class PersonnelRequisition {
   })
   numberOfVacancies: number;
 
+  @Column({
+    default: 0,
+  })
+  percentageOfCompliance: number;
+
   @Column()
   isExternal: boolean;
 

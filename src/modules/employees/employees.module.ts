@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { EmployeesSeedService } from './employees.seed.service';
 import { EmployeesController } from './employees.controller';
 import { EmployeesService } from './employees.service';
+import { PersonnelRequisition } from '../personnel-requisitions/entities/personnel-requisition.entity';
 import {
   Employee,
   EmployeeArea,
@@ -18,6 +19,7 @@ import {
       EmployeeArea,
       EmployeePosition,
       EmployeeGenre,
+      PersonnelRequisition,
     ]),
   ],
   controllers: [EmployeesController],

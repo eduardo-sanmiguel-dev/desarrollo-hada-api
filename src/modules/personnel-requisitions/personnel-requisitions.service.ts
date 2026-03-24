@@ -84,6 +84,53 @@ export class PersonnelRequisitionsService {
     return users;
   }
 
+  private async syncUsersRemplaced(
+    requisitionId: number,
+    usersRemplaced?: number[],
+  ) {
+    if (usersRemplaced === undefined) {
+      return;
+    }
+
+    const uniqueNextIds = Array.from(new Set(usersRemplaced));
+
+    const currentEmployees = await this.employeesRepository.find({
+      where: {
+        personnelRequisition: { id: requisitionId },
+      },
+      select: ['id'],
+    });
+
+    const currentIds = currentEmployees.map((employee) => employee.id);
+    const nextIdsSet = new Set(uniqueNextIds);
+    const currentIdsSet = new Set(currentIds);
+
+    const toUnlink = currentIds.filter((id) => !nextIdsSet.has(id));
+    const toLink = uniqueNextIds.filter((id) => !currentIdsSet.has(id));
+
+    if (toUnlink.length) {
+      await Promise.all(
+        toUnlink.map((employeeId) =>
+          this.employeesRepository.update(employeeId, {
+            personnelRequisition: null as unknown as PersonnelRequisition,
+          }),
+        ),
+      );
+    }
+
+    if (toLink.length) {
+      await Promise.all(
+        toLink.map((employeeId) =>
+          this.employeesRepository.update(employeeId, {
+            personnelRequisition: {
+              id: requisitionId,
+            } as PersonnelRequisition,
+          }),
+        ),
+      );
+    }
+  }
+
   async create(
     createPersonnelRequisitionDto: CreatePersonnelRequisitionDto,
     userId: number,
@@ -145,6 +192,10 @@ export class PersonnelRequisitionsService {
 
     const row =
       await this.personnelRequisitionsRepository.save(personnelRequisition);
+
+    if (usersRemplaced.length) {
+      await this.syncUsersRemplaced(row.id, usersRemplaced);
+    }
 
     const currentPersonnelRequisition = await this.findOne(row.id);
 
@@ -245,6 +296,39 @@ export class PersonnelRequisitionsService {
       );
     }
 
+    const queryRecord = query as unknown as Record<string, unknown>;
+    const areaIdRaw = queryRecord.areaId;
+    const areaId = typeof areaIdRaw === 'number' ? areaIdRaw : undefined;
+    if (areaId) {
+      qb.andWhere('area.id = :areaId', { areaId });
+    }
+
+    const positionRequiredIdRaw = queryRecord.positionRequiredId;
+    const positionRequiredId =
+      typeof positionRequiredIdRaw === 'number'
+        ? positionRequiredIdRaw
+        : undefined;
+    if (positionRequiredId) {
+      qb.andWhere('positionRequired.id = :positionRequiredId', {
+        positionRequiredId,
+      });
+    }
+
+    const isAuthorizedRaw = queryRecord.isAuthorized;
+    const isAuthorized =
+      typeof isAuthorizedRaw === 'boolean' ? isAuthorizedRaw : undefined;
+    if (typeof isAuthorized === 'boolean') {
+      qb.andWhere('requisition.isAuthorized = :isAuthorized', {
+        isAuthorized,
+      });
+    }
+
+    if (query.excludeFullCompliance) {
+      qb.andWhere('requisition.percentageOfCompliance != :fullCompliance', {
+        fullCompliance: 100,
+      });
+    }
+
     const sortColumnByField: Record<
       | 'id'
       | 'requestDate'
@@ -315,7 +399,7 @@ export class PersonnelRequisitionsService {
     updatePersonnelRequisitionDto: UpdatePersonnelRequisitionDto,
     userId: number,
   ) {
-    const personnelRequisition = await this.findOne(id);
+    await this.findOne(id);
 
     const {
       areaId,
@@ -331,25 +415,47 @@ export class PersonnelRequisitionsService {
 
     const projectId = await this.projectReplacedCreate(projectReplacedName);
 
-    await this.personnelRequisitionsRepository.update(
-      id,
-      Object.assign(personnelRequisition, {
-        numberOfVacancies,
-        area: { id: areaId },
-        requestingUser: { id: userId },
-        workplace: { id: workplaceId },
-        positionRequired: { id: positionRequiredId },
-        reasonForRequest: { id: reasonForRequestId },
-        updatedBy: { id: userId },
-        updatedAt: new Date(),
-        isExternal,
-        observations,
-        ...(projectId ? { projectReplaced: { id: projectId } } : {}),
-        ...(usersRemplaced && {
-          usersRemplaced: usersRemplaced.map((userId) => ({ id: userId })),
-        }),
-      }),
-    );
+    const updatePayload: Partial<PersonnelRequisition> = {
+      ...(numberOfVacancies !== undefined ? { numberOfVacancies } : {}),
+      ...(areaId
+        ? { area: { id: areaId } as PersonnelRequisition['area'] }
+        : {}),
+      requestingUser: { id: userId } as PersonnelRequisition['requestingUser'],
+      ...(workplaceId
+        ? {
+            workplace: { id: workplaceId } as PersonnelRequisition['workplace'],
+          }
+        : {}),
+      ...(positionRequiredId
+        ? {
+            positionRequired: {
+              id: positionRequiredId,
+            } as PersonnelRequisition['positionRequired'],
+          }
+        : {}),
+      ...(reasonForRequestId
+        ? {
+            reasonForRequest: {
+              id: reasonForRequestId,
+            } as PersonnelRequisition['reasonForRequest'],
+          }
+        : {}),
+      updatedBy: { id: userId } as PersonnelRequisition['updatedBy'],
+      updatedAt: new Date(),
+      ...(isExternal !== undefined ? { isExternal } : {}),
+      ...(observations !== undefined ? { observations } : {}),
+      ...(projectId
+        ? {
+            projectReplaced: {
+              id: projectId,
+            } as PersonnelRequisition['projectReplaced'],
+          }
+        : {}),
+    };
+
+    await this.personnelRequisitionsRepository.update(id, updatePayload);
+
+    await this.syncUsersRemplaced(id, usersRemplaced);
 
     return this.findOne(id);
   }
