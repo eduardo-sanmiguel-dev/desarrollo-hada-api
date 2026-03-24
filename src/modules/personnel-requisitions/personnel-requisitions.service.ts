@@ -331,23 +331,25 @@ export class PersonnelRequisitionsService {
 
     const projectId = await this.projectReplacedCreate(projectReplacedName);
 
-    Object.assign(personnelRequisition, {
-      numberOfVacancies,
-      area: { id: areaId },
-      requestingUser: { id: userId },
-      workplace: { id: workplaceId },
-      positionRequired: { id: positionRequiredId },
-      reasonForRequest: { id: reasonForRequestId },
-      updatedBy: { id: userId },
-      isExternal,
-      observations,
-      ...(projectId ? { projectReplaced: { id: projectId } } : {}),
-      ...(usersRemplaced && {
-        usersRemplaced: usersRemplaced.map((userId) => ({ id: userId })),
+    await this.personnelRequisitionsRepository.update(
+      id,
+      Object.assign(personnelRequisition, {
+        numberOfVacancies,
+        area: { id: areaId },
+        requestingUser: { id: userId },
+        workplace: { id: workplaceId },
+        positionRequired: { id: positionRequiredId },
+        reasonForRequest: { id: reasonForRequestId },
+        updatedBy: { id: userId },
+        updatedAt: new Date(),
+        isExternal,
+        observations,
+        ...(projectId ? { projectReplaced: { id: projectId } } : {}),
+        ...(usersRemplaced && {
+          usersRemplaced: usersRemplaced.map((userId) => ({ id: userId })),
+        }),
       }),
-    });
-
-    await this.personnelRequisitionsRepository.save(personnelRequisition);
+    );
 
     return this.findOne(id);
   }

@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { CreateEmployeeDto, UpdateEmployeeDto } from './dto';
 import { EmployeesService } from './employees.service';
 
@@ -17,8 +18,11 @@ export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
   @Post()
-  create(@Body() createEmployeeDto: CreateEmployeeDto) {
-    return this.employeesService.create(createEmployeeDto);
+  create(
+    @Body() createEmployeeDto: CreateEmployeeDto,
+    @CurrentUser() userId: number,
+  ) {
+    return this.employeesService.create(createEmployeeDto, userId);
   }
 
   @Get()
@@ -38,6 +42,11 @@ export class EmployeesController {
     );
   }
 
+  @Get('genders')
+  findAllGenders() {
+    return this.employeesService.findAllGenders();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.employeesService.findOne(+id);
@@ -47,12 +56,13 @@ export class EmployeesController {
   update(
     @Param('id') id: string,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @CurrentUser() userId: number,
   ) {
-    return this.employeesService.update(+id, updateEmployeeDto);
+    return this.employeesService.update(+id, updateEmployeeDto, userId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.employeesService.remove(+id);
+  remove(@Param('id') id: string, @CurrentUser() userId: number) {
+    return this.employeesService.remove(+id, userId);
   }
 }
