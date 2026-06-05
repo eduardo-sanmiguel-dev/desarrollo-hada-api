@@ -80,3 +80,26 @@ declare module 'jsonwebtoken' {
 
   export function verify(token: string, secret: string): string | JwtPayload;
 }
+
+declare module 'xlsx-populate' {
+  interface Cell {
+    value(): unknown;
+    value(value: unknown): Cell;
+  }
+
+  interface Sheet {
+    cell(row: number, column: number): Cell;
+  }
+
+  interface Workbook {
+    sheet(index: number): Sheet;
+    toFileAsync(path: string): Promise<void>;
+    outputAsync(): Promise<Uint8Array>;
+  }
+
+  const XlsxPopulate: {
+    fromFileAsync(path: string): Promise<Workbook>;
+  };
+
+  export default XlsxPopulate;
+}

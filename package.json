@@ -37,13 +37,15 @@
     "cookie": "^1.0.2",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^8.0.3",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.28"
+    "typeorm": "^0.3.28",
+    "xlsx-populate": "^1.21.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
