@@ -3,7 +3,9 @@ import {
   Controller,
   Get,
   Header,
+  Param,
   Post,
+  Query,
   StreamableFile,
 } from '@nestjs/common';
 
@@ -11,6 +13,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import {
   CreateNonconformanceReportDto,
   ExportNonconformanceReportsExcelDto,
+  FindAllNonconformanceReportsDto,
 } from './dto';
 import { NonconformanceReportsService } from './nonconformance-reports.service';
 
@@ -32,8 +35,13 @@ export class NonconformanceReportsController {
   }
 
   @Get()
-  findAll() {
-    return this.nonconformanceReportsService.findAll();
+  findAll(@Query() query: FindAllNonconformanceReportsDto) {
+    return this.nonconformanceReportsService.findAll(query);
+  }
+
+  @Get('count-by-employee/:employeeId')
+  countByEmployee(@Param('employeeId') employeeId: string) {
+    return this.nonconformanceReportsService.countByEmployee(+employeeId);
   }
 
   @Post('export-excel')

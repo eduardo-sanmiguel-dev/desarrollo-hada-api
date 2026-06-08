@@ -5,9 +5,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Workbook as ExcelJsWorkbook } from 'exceljs';
 import xlsxPopulate from 'xlsx-populate';
 
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 
-import { CreateNonconformanceReportDto } from './dto';
+import {
+  CreateNonconformanceReportDto,
+  FindAllNonconformanceReportsDto,
+} from './dto';
 import { Employee } from '../employees/entities/employee.entity';
 import { User } from '../users/entities/user.entity';
 import { NonconformanceReport } from './entities/nonconformance-report.entity';
@@ -110,48 +113,108 @@ export class NonconformanceReportsService {
     return this.nonconformanceReportsRepository.save(report);
   }
 
-  async findAll() {
-    const reports = await this.nonconformanceReportsRepository.find({
-      order: { createdAt: 'DESC' },
+  async countByEmployee(employeeId: number) {
+    const totalReports = await this.nonconformanceReportsRepository.count({
+      where: { employeeId },
     });
 
-    if (reports.length === 0) {
-      return reports;
+    return {
+      employeeId,
+      totalReports,
+    };
+  }
+
+  async findAll(query: FindAllNonconformanceReportsDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const search = query.search?.trim();
+    const shouldPaginate = limit !== -1;
+
+    const qb = this.nonconformanceReportsRepository
+      .createQueryBuilder('report')
+      .leftJoin(Employee, 'employee', 'employee.id = report.employeeId')
+      .leftJoin(User, 'reportedByUser', 'reportedByUser.id = report.reportedBy')
+      .addSelect('employee.code', 'employee_code')
+      .addSelect('employee.name', 'employee_name')
+      .addSelect('reportedByUser.name', 'reported_by_name');
+
+    if (search) {
+      qb.andWhere(
+        new Brackets((where) => {
+          where.where('CAST(report.id AS TEXT) ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('CAST(report.employeeId AS TEXT) ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('CAST(employee.code AS TEXT) ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('employee.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('report.deviation ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('report.nonconformance ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('CAST(report.reportedBy AS TEXT) ILIKE :search', {
+            search: `%${search}%`,
+          });
+          where.orWhere('reportedByUser.name ILIKE :search', {
+            search: `%${search}%`,
+          });
+        }),
+      );
     }
 
-    const employeeIds = Array.from(
-      new Set(reports.map((item) => item.employeeId)),
-    );
-    const reportedByIds = Array.from(
-      new Set(reports.map((item) => item.reportedBy)),
-    );
+    if (query.startDate) {
+      const startDate = new Date(`${query.startDate}T00:00:00.000`);
+      qb.andWhere('report.createdAt >= :startDate', { startDate });
+    }
 
-    const [employees, users] = await Promise.all([
-      this.employeesRepository.find({
-        where: { id: In(employeeIds) },
-        select: ['id', 'code', 'name'],
-      }),
-      this.usersRepository.find({
-        where: { id: In(reportedByIds) },
-        select: ['id', 'name'],
-      }),
-    ]);
+    if (query.endDate) {
+      const endDate = new Date(`${query.endDate}T23:59:59.999`);
+      qb.andWhere('report.createdAt <= :endDate', { endDate });
+    }
 
-    const employeeMap = new Map(
-      employees.map((employee) => [employee.id, employee]),
-    );
-    const userMap = new Map(users.map((user) => [user.id, user]));
+    qb.orderBy('report.createdAt', 'DESC');
 
-    return reports.map((report) => {
-      const employee = employeeMap.get(report.employeeId);
-      const reportedByUser = userMap.get(report.reportedBy);
+    const total = await qb.getCount();
+
+    if (shouldPaginate) {
+      qb.skip((page - 1) * limit).take(limit);
+    }
+
+    const { entities, raw } = await qb.getRawAndEntities();
+
+    const items = entities.map((report, index) => {
+      const rawRow = raw[index] as {
+        employee_code?: string | number | null;
+        employee_name?: string | null;
+        reported_by_name?: string | null;
+      };
 
       return Object.assign(report, {
-        employeeCode: employee?.code,
-        employeeName: employee?.name ?? null,
-        reportedByName: reportedByUser?.name ?? null,
+        employeeCode: rawRow.employee_code ?? null,
+        employeeName: rawRow.employee_name ?? null,
+        reportedByName: rawRow.reported_by_name ?? null,
       });
     });
+
+    const responseLimit = shouldPaginate ? limit : total;
+    const totalPages = shouldPaginate
+      ? Math.max(1, Math.ceil(total / Math.max(1, limit)))
+      : 1;
+
+    return {
+      items,
+      total,
+      page: shouldPaginate ? page : 1,
+      limit: responseLimit,
+      totalPages,
+    };
   }
 
   async exportExcel(ids: number[]): Promise<Uint8Array> {
