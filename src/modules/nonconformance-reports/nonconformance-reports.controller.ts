@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Header,
+  InternalServerErrorException,
   Param,
   Post,
   Query,
@@ -12,7 +13,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { join } from 'node:path';
+import { rename } from 'node:fs/promises';
+import { extname, join } from 'node:path';
 
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import {
@@ -23,7 +25,12 @@ import {
 import { NonconformanceReportsService } from './nonconformance-reports.service';
 
 type FileFilterCallback = (error: Error | null, acceptFile: boolean) => void;
-type UploadedImageFile = { mimetype: string; filename: string };
+type UploadedImageFile = {
+  mimetype: string;
+  filename: string;
+  originalname?: string;
+  path?: string;
+};
 
 const EVIDENCE_UPLOAD_DIR = join(
   process.cwd(),
@@ -36,6 +43,36 @@ export class NonconformanceReportsController {
   constructor(
     private readonly nonconformanceReportsService: NonconformanceReportsService,
   ) {}
+
+  private getExtensionFromMimeType(mimeType: string): string {
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/jpg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+      'image/bmp': '.bmp',
+      'image/tiff': '.tif',
+      'image/svg+xml': '.svg',
+    };
+
+    return mimeToExt[mimeType.toLowerCase()] ?? '.jpg';
+  }
+
+  private resolveFinalFilename(file: UploadedImageFile): string {
+    const extensionFromFilename = extname(file.filename || '').toLowerCase();
+    if (extensionFromFilename) {
+      return file.filename;
+    }
+
+    const extensionFromOriginalName = extname(
+      file.originalname || '',
+    ).toLowerCase();
+    const extension =
+      extensionFromOriginalName || this.getExtensionFromMimeType(file.mimetype);
+
+    return `${file.filename}${extension}`;
+  }
 
   @Post()
   @UseInterceptors(
@@ -61,7 +98,7 @@ export class NonconformanceReportsController {
       },
     }),
   )
-  create(
+  async create(
     @Body() createNonconformanceReportDto: CreateNonconformanceReportDto,
     @CurrentUser() userId: number,
     @UploadedFile() file?: UploadedImageFile,
@@ -72,7 +109,21 @@ export class NonconformanceReportsController {
       );
     }
 
-    const imageUrl = `/nonconformance-evidences/${file.filename}`;
+    const finalFilename = this.resolveFinalFilename(file);
+    if (finalFilename !== file.filename) {
+      const currentPath = file.path ?? join(EVIDENCE_UPLOAD_DIR, file.filename);
+      const finalPath = join(EVIDENCE_UPLOAD_DIR, finalFilename);
+
+      try {
+        await rename(currentPath, finalPath);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          'No fue posible guardar la imagen de evidencia con extensión válida.',
+        );
+      }
+    }
+
+    const imageUrl = `/nonconformance-evidences/${finalFilename}`;
 
     return this.nonconformanceReportsService.create(
       createNonconformanceReportDto,
