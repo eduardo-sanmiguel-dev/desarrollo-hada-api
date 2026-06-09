@@ -27,6 +27,9 @@ pids
 *.seed
 *.pid.lock
 
+# Local evidence uploads
+/public/nonconformance-evidences/
+
 # TypeScript cache
 *.tsbuildinfo
 
