@@ -11,6 +11,7 @@ import {
   CreateNonconformanceReportDto,
   FindAllNonconformanceReportsDto,
 } from './dto';
+import { MailService } from '../mail/mail.service';
 import { Employee } from '../employees/entities/employee.entity';
 import { User } from '../users/entities/user.entity';
 import { NonconformanceReport } from './entities/nonconformance-report.entity';
@@ -43,6 +44,7 @@ export class NonconformanceReportsService {
     private readonly employeesRepository: Repository<Employee>,
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly mailService: MailService,
   ) {}
 
   private readonly templatePath = resolve(
@@ -103,14 +105,54 @@ export class NonconformanceReportsService {
   async create(
     createNonconformanceReportDto: CreateNonconformanceReportDto,
     userId: number,
+    imageUrl: string,
   ) {
     const report = this.nonconformanceReportsRepository.create(
       Object.assign(createNonconformanceReportDto, {
         reportedBy: userId,
+        imageUrl,
       }),
     );
 
-    return this.nonconformanceReportsRepository.save(report);
+    const savedReport = await this.nonconformanceReportsRepository.save(report);
+
+    const totalReports = await this.nonconformanceReportsRepository.count({
+      where: { employeeId: savedReport.employeeId },
+    });
+
+    if (totalReports > 2) {
+      const [employee, reportedByUser] = await Promise.all([
+        this.employeesRepository.findOne({
+          where: { id: savedReport.employeeId },
+          select: ['name'],
+        }),
+        this.usersRepository.findOne({
+          where: { id: savedReport.reportedBy },
+          select: ['name'],
+        }),
+      ]);
+
+      const employeeName = employee?.name?.trim() || 'No especificado';
+      const reportedByName = reportedByUser?.name?.trim() || 'No especificado';
+
+      const notifier = this.mailService as {
+        nonconformanceReportThresholdReached: (
+          report: NonconformanceReport,
+          accumulatedReports: number,
+          employeeName: string,
+          reportedByName: string,
+        ) => Promise<void>;
+      };
+
+      void notifier.nonconformanceReportThresholdReached(
+        savedReport,
+        totalReports,
+        employeeName,
+        reportedByName,
+      );
+    }
+
+    return savedReport;
   }
 
   async countByEmployee(employeeId: number) {

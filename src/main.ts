@@ -1,6 +1,8 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'node:path';
 
 import { GlobalExceptionFilter } from './common/filters';
 import { AppModule } from './app.module';
@@ -8,7 +10,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const logger = new Logger('MAIN');
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
   const PORT = configService.get<number>('app.port', 4002);
   const NODE_ENV = configService.get<string>('app.nodeEnv', 'development');
@@ -28,6 +30,10 @@ async function bootstrap() {
   });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  app.useStaticAssets(join(process.cwd(), 'public'), {
+    prefix: '/',
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

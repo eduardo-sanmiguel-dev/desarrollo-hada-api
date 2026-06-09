@@ -22,6 +22,9 @@ export class NonconformanceReport {
   @Column({ type: 'text', nullable: true })
   signatureBase64?: string;
 
+  @Column({ type: 'text', nullable: true })
+  imageUrl?: string;
+
   @Column({ type: 'int' })
   reportedBy!: number;
 
