@@ -1,8 +1,5 @@
 allowBuilds:
   '@nestjs/core': true
+  '@parcel/watcher': true
   argon2: true
   unrs-resolver: true
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - argon2
-  - unrs-resolver
